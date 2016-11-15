@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en-us" ng-app="nightApp">
+  <head>
+    <title>Night Life App</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta charset="UTF-8">
+    <base href="/">
+
+<!--     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" /> -->
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/darkly.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+
+    <script src="js/lib/angular.min.js"></script>
+    <script src="js/lib/angular-route.min.js"></script>
+    <script src="js/app.js"></script>
+  </head>
+  <body>
+    
+    <div ng-controller="navCtrl">
+      
+      <header>
+        
+        <nav class="navbar navbar-default">
+        <div class="container">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="/">Voting App</a>
+          </div>
+
+          <ul class="nav navbar-nav navbar-right" ng-show="loaded">
+            <li ng-hide="user"><a href="/" ng-click="login()">Login with Twitter </a></li>
+            <li ng-show="user"><a href="/"> Signed as {{user}} </a></li>
+            <li ng-show="user"><a href="/" ng-click="logout()"> Logout </a></li>
+          </ul>
+        </div>
+        </nav>
+        
+      </header>
+
+      <div class="container">
+        <div ng-view></div>
+      </div>
+    </div>
+
+<!--     <footer>
+      <a href="#" style="float: right" class="navbar-link">Top</a></p>
+    </footer> -->
+
+  </body>
+</html>

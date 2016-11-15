@@ -1,0 +1,40 @@
+<form id="search" class="input-group input-group-lg" ng-submit="findPlaces(value.term)">
+	<span class="input-group-btn">
+		<button class="btn btn-default" type="submit" >Search</button>
+	</span>
+	<input type="text" class="form-control" ng-model="value.term" id="search" placeholder={{center}}>
+</form>
+
+<hr />
+
+<div ng-show="searching">
+	<i class="fa fa-spinner fa-pulse fa-5x fa-fw col-sm-2 col-sm-offset-5"></i>
+	<span class="sr-only">Loading...</span>
+</div>
+
+<div ng-show="bars && !searching">
+	<h1> Results for {{ center }}</h1>
+<!-- 	Add Sorting/Filtering Options -->
+	<div ng-repeat="place in bars" class="panel panel-default">
+	<div class="panel-heading">
+		<h4>{{ place.name }} | {{ place.rating }}/5 | {{ place.people }} Going 
+			<button class="btn btn-primary btn-sm" ng-click="opting(place)"> 
+				<span ng-hide=place.going>I'm In!</span>
+				<span ng-show=place.going>I'm Out!</span>
+			</button>
+		</h4>
+	</div>
+		<div class="panel-body">
+			<div class="media">
+				<div class="media-left">
+					<img class="media-object" src="{{place.image}}">
+				</div>
+			<div class="media-body">
+				<p><a href="{{ place.yelpUrl }}" ng-click="external(place.yelpUrl)">{{ place.snippet }}</a></p>
+				<span ng-repeat="line in place.address"> {{ line }} </span> <!-- Add Link to Google Map?-->
+				<p>{{ place.phone.substr(3) }}</p>
+			</div>
+			</div>
+		</div>
+	</div>
+</div>
