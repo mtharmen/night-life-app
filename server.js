@@ -2,7 +2,7 @@ require('dotenv').config();
 var path         = require('path');
 var express      = require('express');
 var passport     = require('passport');
-var bodyParser   = require('body-parser');
+// var bodyParser   = require('body-parser');
 var cookieParser = require('cookie-parser');
 var mongoose     = require('mongoose');
 var session      = require('express-session');
@@ -23,15 +23,13 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
   console.log('Connected to nightLifeAppDB');
-  // Check if there is data, save the defaults if not there
-  //require('./config/database').checkDefaults();
 });
 
 require('./config/passport')(passport, ip, port);
 
 app.use(cookieParser());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(session({
   secret: process.env.sessionSecret,
@@ -51,7 +49,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 require('./routes/index')(app);
 require('./routes/auth')(app, passport);
-require('./routes/api')(app, bodyParser.json());
+require('./routes/api')(app);
 
 // Catch all for AngularJS html5mode
 app.get('*', function(req, res) {
@@ -70,6 +68,3 @@ process.on('SIGINT', function() {
     process.exit(0); 
   }); 
 });
-
-//cd "Computer\Program Files\MongoDB\Server\3.2"
-//mongod --dbpath data/db --port 27017 --smallfiles

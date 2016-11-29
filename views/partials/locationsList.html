@@ -1,4 +1,4 @@
-<form id="search" class="input-group input-group-lg" ng-submit="findPlaces(value.term)">
+<form id="search" class="input-group" ng-submit="findPlaces(value.term)">
 	<span class="input-group-btn">
 		<button class="btn btn-default" type="submit" >Search</button>
 	</span>
@@ -17,7 +17,7 @@
 <!-- 	Add Sorting/Filtering Options -->
 	<div ng-repeat="place in bars" class="panel panel-default">
 	<div class="panel-heading">
-		<h4>{{ place.name }} | {{ place.rating }}/5 | {{ place.people }} Going 
+		<h4>{{ place.name }} | <span ng-repeat="star in place.stars track by $index"><i class="{{star}}" aria-hidden="true"></i></span> | {{ place.people }} Going
 			<button class="btn btn-primary btn-sm" ng-click="opting(place)"> 
 				<span ng-hide=place.going>I'm In!</span>
 				<span ng-show=place.going>I'm Out!</span>

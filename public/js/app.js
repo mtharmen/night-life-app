@@ -1,24 +1,30 @@
 'use strict';
 
-var nightApp = angular.module('nightApp', ['ngRoute']);
+var nightApp = angular.module('nightApp', ['ngRoute', 'ngAnimate', 'ui.bootstrap']);
 
 // Factory
-nightApp.factory('userFactory', function($http){
-    
-  var storedUser = { user: undefined };
+nightApp.factory('accountFactory', ['$http', '$window', function($http, $window) {
 
-  return {
-        
+  return {    
     fetchUser: function() {
       return $http.get('/auth/user')
     },
+
+    twitterSignIn: function() {
+      $window.location.href = '/auth/twitter'
+      //return $http.post('/auth/twitter', user)
+    },
+
+    twitterUnlink: function(user) {
+      return $http.get('/unlink/twitter')
+    },
     
     logout: function() {
-      storedUser.user = undefined;
-      window.location.href = '/logout';      
+      $window.location.href = '/logout';      
     }
-  };
-});
+  }
+}])
+
 
 nightApp.factory('placesFactory', function($http){
     
@@ -32,20 +38,64 @@ nightApp.factory('placesFactory', function($http){
     },
 
     optIn: function(barName, user) {
-      return $http.post('/api/add/' + barName + '/' + user)
+      return $http.post('/api/add/' + barName)
     },
 
     optOut: function(barName, user) {
-      return $http.post('/api/remove/' + barName + '/' + user)
+      return $http.post('/api/remove/' + barName)
     }
   };
 });
+
+nightApp.factory('modalFactory', ['$uibModal', function($uibModal) {
+  
+  return {    
+    confirm: function(dialog, choose) {
+
+      var choice = '';
+      if (choose) {
+        choice += '<button class="btn btn-primary col-xs-6" ng-click="confirm()">Okay</button>'
+        choice += '<button class="btn btn-danger col-xs-6" ng-click="cancel()">Cancel</button>'
+      } else {
+        choice = '<button class="btn btn-primary col-xs-6 col-xs-offset-3" ng-click="confirm()">Okay</button>'
+      }
+
+      var modalOptions = {
+        animation: true,
+        template: '<div class="row" id="confirm-modal" style="padding-bottom: 30px">' +
+                    '<div class="col-xs-10 col-xs-offset-1">' +
+                      '<h3 style="text-align: center">' + dialog + '</h3>' +
+                      '<br />' +
+                    '</div>' +
+                    '<div class="col-xs-10 col-xs-offset-1">' +
+                      choice +
+                    '</div>' +
+                  '</div>',
+        controller: ['$scope', '$uibModalInstance', function($scope, $uibModalInstance) {
+            $scope.confirm = function () {
+              $uibModalInstance.close('yes');
+            };
+
+            $scope.cancel = function () {
+              $uibModalInstance.dismiss('cancel');
+            };
+        }]
+      };
+      
+      return $uibModal.open(modalOptions);
+    }
+  }
+}])
 
 nightApp.config(function($routeProvider, $locationProvider) {
   // TODO: Figure out how to hide page until the $http requests are done
   $routeProvider
     .when('/', {
       templateUrl: 'partials/locationsList',
+      controller: 'homeCtrl'
+    })
+    .when('/error', {
+      templateUrl: 'partials/error',
       controller: 'homeCtrl'
     })
     .otherwise({
@@ -56,28 +106,68 @@ nightApp.config(function($routeProvider, $locationProvider) {
 });
 
 // Controllers
-nightApp.controller('navCtrl', ['$scope', 'userFactory', function($scope, userFactory) {
-    
-  userFactory.fetchUser().then(
+nightApp.controller('navCtrl', ['$scope', '$location', 'accountFactory', 'modalFactory', function($scope, $location, accountFactory, modalFactory) {
+   
+  accountFactory.fetchUser().then(
     function successCB (response) {
-      $scope.user = response.data.user ? response.data.user.username : undefined;
+      $scope.user = response.data.user;
       $scope.loaded = true;
     },
     function errorCB (response) {
       console.error(response.status + ':' + response.statusText);
-  });
+      window.location = '/error'
+    });
 
-  $scope.login = function() {
-    window.location.href = '/auth/twitter/';    
+  $scope.newUser = function () {
+              
+    var modalInstance = modalFactory.confirm('Sign in with Twitter?', true)
+    
+    modalInstance.result.then(
+      function successCB () {
+        accountFactory.twitterSignIn()        
+      }, 
+      function cancelCB () {
+      }
+    );
   };
 
+  $scope.twitterUnlink = function() {
+    var modalInstance = modalFactory.confirm('Unlink your Twitter account?', true)
+    
+    modalInstance.result.then(
+      function successCB (user) {
+        accountFactory.twitterUnlink().then(
+          function successCB (response) {
+            $scope.user = undefined;
+            $location.url('/');
+          },
+          function cancelCB (response) {
+            console.error(response.status + ':' + response.statusText);
+            window.location = '/error'
+          });
+        
+      }, 
+      function errorCB () {
+      }
+    );
+  }
+
   $scope.logout = function() {
-    userFactory.logout()
+    var modalInstance = modalFactory.confirm('Logout?', true)
+    
+    modalInstance.result.then(
+      function successCB (res) {
+        accountFactory.logout();
+      }, 
+      function cancelCB () {
+      }
+    );
+     
   }
   
 }]);
 
-nightApp.controller('homeCtrl', ['$scope', 'placesFactory', function($scope, placesFactory) {
+nightApp.controller('homeCtrl', ['$scope', 'placesFactory', 'modalFactory', function($scope, placesFactory, modalFactory) {
   
   $scope.center = "Where are you?"
 
@@ -93,37 +183,36 @@ nightApp.controller('homeCtrl', ['$scope', 'placesFactory', function($scope, pla
           }
           $scope.searching = false;
         }, function(res) {
-          console.error(res)
+          console.error(res.status + ':' + res.statusText);
+          window.location = '/error'
         }
       )
   }
 
   $scope.opting = function(place) {
     if (!$scope.user) {
-      alert('You need to be logged in to continue.')
+      var modalInstance = modalFactory.confirm('You need to be logged in continue')
     }
     else if (place.going) {
       place.people--
       place.going = false
       placesFactory.optOut(place.name, $scope.user)
         .then(function(res) {
-          console.log('opted out')
         }, function(res) {
-          console.error(res)
+          console.error(res.status + ':' + res.statusText);
+          window.location = '/error'
         }
       )
-      console.log('Opting Out, telling server')
     } else {
       place.people++
       place.going = true
       placesFactory.optIn(place.name, $scope.user)
         .then(function(res) {
-          console.log('opted in')
         }, function(res) {
-          console.error(res)
+          console.error(res.status + ':' + res.statusText);
+          window.location = '/error'
         }
       )
-      console.log('Opting In, telling server')
     }
   }
 
@@ -138,7 +227,8 @@ nightApp.controller('homeCtrl', ['$scope', 'placesFactory', function($scope, pla
         $scope.findPlaces(res.data)
       }
     }, function(res) {
-      console.error(res)
+      console.error(res.status + ':' + res.statusText);
+      window.location = '/error'
     })
 
   
