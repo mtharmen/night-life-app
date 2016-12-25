@@ -2,8 +2,10 @@ var TwitterStrategy = require('passport-twitter').Strategy;
 require('dotenv').config()
 
 var User = require('../config/models/user');
+const ip   = process.env.IP   || '127.0.0.1';
+const port = process.env.PORT || 8080;
 
-module.exports = function(passport, ip, port) {
+module.exports = function(passport) {
 
   passport.serializeUser(function(user, done) {
     done(null, user.id);
@@ -40,8 +42,7 @@ module.exports = function(passport, ip, port) {
                 user.twitter.displayName = profile.displayName;
 
                 user.save(function(err) {
-                  if (err)
-                    return done(err);
+                  if (err) { return done(err) }
 
                   return done(null, user);
                 });

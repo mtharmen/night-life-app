@@ -1,5 +1,7 @@
+var passport = require('passport');
+
 // Authenticating
-module.exports = function(app, passport) {
+module.exports = function(app) {
 
   app.get('/auth/user', function(req, res) {
     if (req.user) {

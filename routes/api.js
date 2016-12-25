@@ -4,11 +4,11 @@ var Bar  = require('../config/models/bar');
 
 module.exports = function(app) {
 
-  app.get('/api/previous', function(req, res) { 
+  app.get('/api/previous', function(req, res, next) { 
     res.send(req.session.location)
   })
 
-  app.get('/api/search/:location', function(req, res) {
+  app.get('/api/search/:location', function(req, res, next) {
     var user = req.user ? req.user.twitter.username : '';
     var location = req.params.location;
 
@@ -33,17 +33,15 @@ module.exports = function(app) {
             res.send({ bars: bars, location: location })
           })
         .catch(function(err){
-          console.error(err)
-          res.status(400).send(err)
+           return next(err);
         })
       })
       .catch(function(err){
-        console.error(err);
-        res.status(400).send(err)
+        return next(err);
       }); 
   });
 
-  app.post('/api/add/:barName', function(req, res) {
+  app.post('/api/add/:barName', function(req, res, next) {
     var barName = req.params.barName;
     var userName = req.user ? req.user.twitter.username : '';
     if (!userName) {
@@ -53,13 +51,9 @@ module.exports = function(app) {
       var expire = d.getTime() + 1000 * 60 * 60 * 8; // expire in 8 hours
       var reserve = new Bar({ expire: expire, bar: barName, person: userName })
       reserve.save(function(err) {
-        if (err) {
-          console.error(err);
-          res.status(400).send(err)
-        } else {
-          console.log(userName + ' reserved at ' + barName)
-          res.send('saved')
-        }
+        if (err) { return next(err); }
+        console.log(userName + ' reserved at ' + barName)
+        res.send('saved')
       })
     }
   })
@@ -71,13 +65,9 @@ module.exports = function(app) {
       res.status(400).send('User not logged in.')
     } else {
       Bar.remove({ bar: barName, person: userName }, function(err) {
-        if (err) {
-          console.error(err);
-          res.status(400).send(err)
-        } else {
-          console.log(userName + ' removed from ' + barName)
-          res.send('removed')
-        }
+        if (err) { return next(err); }
+        console.log(userName + ' removed from ' + barName)
+        res.send('removed')
       })
     }
   })

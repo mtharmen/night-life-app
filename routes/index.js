@@ -15,4 +15,9 @@ module.exports = function(app, passport) {
     req.logout();
     res.redirect('/');
   });
+
+  // Catch all for AngularJS html5mode
+  app.get('*', function(req, res) {
+    res.sendFile(path.join(__dirname, '/../views/index.html'));
+  });
 };

@@ -26,7 +26,7 @@ nightApp.factory('accountFactory', ['$http', '$window', function($http, $window)
 }])
 
 
-nightApp.factory('placesFactory', function($http){
+nightApp.factory('placesFactory', ['$http', function($http){
     
   return {
     previous: function() {
@@ -45,7 +45,7 @@ nightApp.factory('placesFactory', function($http){
       return $http.post('/api/remove/' + barName)
     }
   };
-});
+}]);
 
 nightApp.factory('modalFactory', ['$uibModal', function($uibModal) {
   
