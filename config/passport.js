@@ -1,5 +1,5 @@
 var TwitterStrategy = require('passport-twitter').Strategy;
-require('dotenv').config()
+require('dotenv').config();
 
 var User = require('../config/models/user');
 const ip   = process.env.IP   || '127.0.0.1';
@@ -42,7 +42,7 @@ module.exports = function(passport) {
                 user.twitter.displayName = profile.displayName;
 
                 user.save(function(err) {
-                  if (err) { return done(err) }
+                  if (err) { return done(err); }
 
                   return done(null, user);
                 });
@@ -70,4 +70,4 @@ module.exports = function(passport) {
 
   }));
 
-}
+};

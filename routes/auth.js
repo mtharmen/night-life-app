@@ -7,10 +7,10 @@ module.exports = function(app) {
     if (req.user) {
       res.json({
         user: req.user.twitter
-      })
+      });
     } 
     else {
-      res.json({})
+      res.json({});
     }
   });
   
@@ -26,7 +26,7 @@ module.exports = function(app) {
     var user           = req.user;
     user.twitter.token = undefined;
     user.save(function(err) {
-      req.logout()
+      req.logout();
       res.redirect('/profile');
     });
   });

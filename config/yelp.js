@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config();
 var Yelp = require('yelp');
 
 module.exports = new Yelp({
