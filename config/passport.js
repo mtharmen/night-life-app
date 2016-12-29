@@ -2,8 +2,9 @@ var TwitterStrategy = require('passport-twitter').Strategy;
 require('dotenv').config();
 
 var User = require('../config/models/user');
-const ip   = process.env.IP   || '127.0.0.1';
-const port = process.env.PORT || 8080;
+const ip           = process.env.IP           || '127.0.0.1';
+const port         = process.env.PORT         || 8080;
+const callback_url = process.env.CALLBACK_URL || 'http://' + ip + ':' + port
 
 module.exports = function(passport) {
 
@@ -19,9 +20,9 @@ module.exports = function(passport) {
 
   passport.use(new TwitterStrategy({
 
-    'consumerKey'     : process.env.consumerKey,
-    'consumerSecret'  : process.env.consumerSecret,
-    'callbackURL'     : 'http://' + ip + ':' + port + '/auth/twitter/callback',
+    'consumerKey'     : process.env.TWITTER_CONSUMER_KEY,
+    'consumerSecret'  : process.env.TWITTER_CONSUMER_SECRET,
+    'callbackURL'     : callback_url + '/auth/twitter/callback',
     passReqToCallback : true
 
   },
