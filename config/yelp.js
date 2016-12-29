@@ -2,8 +2,8 @@ require('dotenv').config();
 var Yelp = require('yelp');
 
 module.exports = new Yelp({
-  consumer_key    : process.env.Yelp_Consumer_Key,
-  consumer_secret : process.env.Yelp_Consumer_Secret,
-  token           : process.env.Yelp_Token,
-  token_secret    : process.env.Yelp_Token_Secret
+  consumer_key    : process.env.YELP_CONSUMER_KEY,
+  consumer_secret : process.env.YELP_CONSUMER_SECRET,
+  token           : process.env.YELP_TOKEN,
+  token_secret    : process.env.YELP_TOKEN_SECRET
 });
