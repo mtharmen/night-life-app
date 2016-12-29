@@ -15,8 +15,9 @@ module.exports = function(app, base) {
 	
 	// Mongoose setup
 	mongoose.Promise = global.Promise;
+	var mongodbUrl = process.env.MONGODB_URL || 'mongodb://localhost:8080'
 
-	mongoose.connect('mongodb://' + ip + '/nightLifeAppDB');
+	mongoose.connect(mongodbUrl + '/mtharmen-night-life-app');
 	var db = mongoose.connection;
 	db.on('error', console.error.bind(console, 'connection error:'));
 	db.once('open', function() {
@@ -44,7 +45,7 @@ module.exports = function(app, base) {
 	require('./passport')(passport);
 
 	app.use(session({
-	    secret: process.env.sessionSecret,
+	    secret: process.env.SESSION_SECRET,
 	    resave: true,
 	    store : new MongoStore({
 	        mongooseConnection: mongoose.connection
