@@ -15,19 +15,19 @@ module.exports = function(app, base) {
 	
 	// Mongoose setup
 	mongoose.Promise = global.Promise;
-	var mongodbUrl = process.env.MONGODB_URL || 'mongodb://' + process.env.IP
+	var mongodbUrl = process.env.MONGODB_URL || 'mongodb://' + ip
 
 	mongoose.connect(mongodbUrl + '/mtharmen-night-life-app');
 	var db = mongoose.connection;
 	db.on('error', console.error.bind(console, 'connection error:'));
 	db.once('open', function() {
-	    console.log('Connected to nightLifeAppDB');
+	    console.log('Connected to mtharmen-night-life-app');
 	});
 
 	// Close MongoDB connection
 	process.on('SIGINT', function() {  
 	    db.close(function () { 
-	        console.log('Closing connection to nightLifeAppDB'); 
+	        console.log('Closing connection to mtharmen-night-life-app'); 
 	        process.exit(0); 
 	    }); 
 	});
