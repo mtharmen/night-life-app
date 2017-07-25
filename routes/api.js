@@ -26,7 +26,7 @@ module.exports = function(app) {
               var found = user ? barInfo.filter(function(elm) { return elm.person === user; }) : false;
               bars[i].going = !!found.length;
               // Fix for undefined phone
-              bars[i].phone = bars[i].phone ? bars[i].phone : '  No Phone Number'
+              bars[i].phone = bars[i].phone ? bars[i].phone : '   No Phone Number'
             });
 
             // Saving previous search
