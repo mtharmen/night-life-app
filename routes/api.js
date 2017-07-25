@@ -25,6 +25,8 @@ module.exports = function(app) {
               // If user is logged in, check if they are already going
               var found = user ? barInfo.filter(function(elm) { return elm.person === user; }) : false;
               bars[i].going = !!found.length;
+              // Fix for undefined phone
+              bars[i].phone = bars[i].phone ? bars[i].phone : '  No Phone Number'
             });
 
             // Saving previous search
