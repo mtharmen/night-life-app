@@ -17,7 +17,7 @@ module.exports = function(app, base) {
 	mongoose.Promise = global.Promise;
 	var mongodbUrl = process.env.MONGODB_URL || 'mongodb://' + ip
 
-	mongoose.connect(mongodbUrl + '/mtharmen-night-life-app');
+	mongoose.connect(mongodbUrl + '/mtharmen-night-life-app', { useMongoClient: true });
 	var db = mongoose.connection;
 	db.on('error', console.error.bind(console, 'connection error:'));
 	db.once('open', function() {
