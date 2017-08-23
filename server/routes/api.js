@@ -1,64 +1,58 @@
 const router = require('express').Router()
 
-// const User = require('./../models/user')
-// const CONFIG = require('./../config')
 const my = require('./../helper')
-// const CustomError = my.CustomError
+var Bar = require('../models/bar')
 
+var Yelp = require('yelp')
 require('dotenv').config()
-var yelp = require('../config/yelp')
-var Bar = require('../config/models/bar')
-
-router.get('/api/previous', (req, res, next) => {
-  res.send(req.session.location)
+const yelp = new Yelp({
+  consumer_key: process.env.YELP_CONSUMER_KEY,
+  consumer_secret: process.env.YELP_CONSUMER_SECRET,
+  token: process.env.YELP_TOKEN,
+  token_secret: process.env.YELP_TOKEN_SECRET
 })
 
-router.get('/api/search/:location', my.verifyToken, (req, res, next) => {
-  var user = req.payload.username || ''
-  var location = req.params.location
+router.get('/search/:location', my.verifyToken, (req, res, next) => {
+  const location = req.params.location
 
   yelp.search({ term: 'bars', location: location })
     .then(data => {
       const bars = parse(data.businesses)
-      return bars.map(getPeople)
-    .then(data => {
-      data.forEach((barInfo, i) => {
-        // Number of people going to the bar
-        bars[i].people = barInfo.length
-        // If user is logged in, check if they are already going
-        var found = user ? barInfo.filter(elm => { return elm.person === user }) : false
-        bars[i].going = !!found.length
-      })
-      // Saving previous search
-      req.session.searchResults = bars
-      req.session.location = location
-      console.log(bars[0])
-      console.log(bars[1])
-      res.send({ bars: bars, location: location })
+      req.bars = bars
+      const barSearches = bars.map(getPeople)
+      return Promise.all(barSearches)
     })
+    .then(data => {
+      data.forEach((reservation, i) => {
+        // Number of people going to the bar
+        req.bars[i].people = reservation.length
+        // If user is logged in, check if they are already going
+        const found = req.payload ? reservation.filter(elm => elm.person === req.payload._id.toString()) : []
+        req.bars[i].going = !!found.length
+      })
+      res.send({ bars: req.bars, location: location })
     })
     .catch(err => {
       return next(err)
     })
 })
 
-router.post('/api/add/:barName', my.verifyToken, my.UserGuard, (req, res, next) => {
+router.put('/add/:barName', my.verifyToken, my.UserGuard, (req, res, next) => {
   var barName = req.params.barName
-  var d = new Date()
-  var expire = d.getTime() + 1000 * 60 * 60 * 8 // expire in 8 hours
-  var reserve = new Bar({ expire: expire, bar: barName, person: req.user.username })
+  var expire = Date.now() + 1000 * 60 * 60 * 8 // expire in 8 hours
+  var reserve = new Bar({ expire: expire, bar: barName, person: req.user._id })
   reserve.save(err => {
     if (err) { return next(err) }
-    console.log(req.user.username + ' reserved at ' + barName)
+    console.log(req.user._id + ' reserved at ' + barName)
     res.send('saved')
   })
 })
 
-router.post('/api/remove/:barName', my.verifyToken, my.UserGuard, (req, res, next) => {
+router.delete('/remove/:barName', my.verifyToken, my.UserGuard, (req, res, next) => {
   const barName = req.params.barName
-  Bar.remove({ bar: barName, person: req.user.username }).exec()
+  Bar.remove({ bar: barName, person: req.user._id }).exec()
     .then(result => {
-      console.log(req.user.username + ' removed from ' + barName)
+      console.log(req.user._id + ' removed from ' + barName)
       res.send('removed')
     })
     .catch(err => {
@@ -73,8 +67,8 @@ function parse (data) {
       stars: convertRating(elm.rating),
       rating: elm.rating,
       yelpUrl: elm.url,
-      phone: elm.display_phone,
-      snippet: elm.snippet_text,
+      phone: elm.display_phone || '   No Phone Number Found',
+      snippet: elm.snippet_text || 'No Reviews Found',
       // TODO: Maybe save the image and feed that instead of using yelp
       image: elm.image_url,
       address: elm.location.display_address,
@@ -88,10 +82,7 @@ function parse (data) {
 // TODO: add distance parameter?
 
 function getPeople (bar) {
-  var d = new Date()
-  var expire = d.getTime()
-  var query = Bar.find({ expire: {$gt: expire}, bar: bar.name })
-  return query.exec()
+  return Bar.find({ expire: { $gt: Date.now() }, bar: bar.name }).exec()
 }
 
 function convertRating (rating) {
@@ -109,4 +100,5 @@ function convertRating (rating) {
     return star
   })
 }
+
 module.exports = router

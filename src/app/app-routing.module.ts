@@ -3,7 +3,6 @@ import { Routes, RouterModule } from '@angular/router'
 
 import { HomeComponent } from './pages/home/home.component'
 import { AdminComponent } from './pages/admin/admin.component'
-import { ErrorComponent } from './core/misc/error.component'
 
 import { AuthGuard } from './core/auth.guard'
 import { AdminGuard } from './core/admin.guard'
@@ -12,10 +11,6 @@ const routes: Routes = [
   {
     path: '',
     component: HomeComponent
-  },
-  {
-    path: 'error',
-    component: ErrorComponent
   },
   {
     path: 'admin',

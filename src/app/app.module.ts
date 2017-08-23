@@ -8,8 +8,6 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap'
 
 import { ApiService } from './core/api.service'
 import { AuthService } from './core/auth.service'
-import { ConfirmService } from './core/misc/confirm.service'
-import { ErrorService } from './core/misc/error.service'
 
 import { AppRoutingModule } from './app-routing.module'
 
@@ -19,8 +17,9 @@ import { FooterComponent } from './footer/footer.component'
 import { LoadingComponent } from './core/misc/loading.component'
 import { HomeComponent } from './pages/home/home.component'
 import { AdminComponent } from './pages/admin/admin.component'
-import { ConfirmComponent } from './core/misc/confirm.component';
-import { ErrorComponent } from './core/misc/error.component'
+import { PlacesComponent } from './pages/places/places.component';
+import { SearchFilterPipe } from './core/misc/search-filter.pipe';
+import { TypeFilterPipe } from './core/misc/type-filter.pipe'
 
 @NgModule({
   declarations: [
@@ -30,8 +29,9 @@ import { ErrorComponent } from './core/misc/error.component'
     HomeComponent,
     AdminComponent,
     LoadingComponent,
-    ConfirmComponent,
-    ErrorComponent
+    PlacesComponent,
+    SearchFilterPipe,
+    TypeFilterPipe
   ],
   imports: [
     BrowserModule,
@@ -44,12 +44,7 @@ import { ErrorComponent } from './core/misc/error.component'
   ],
   providers: [
     AuthService,
-    ApiService,
-    ConfirmService,
-    ErrorService
-  ],
-  entryComponents: [
-    ConfirmComponent
+    ApiService
   ],
   bootstrap: [AppComponent]
 })

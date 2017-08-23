@@ -1,3 +1,4 @@
+// Used https://auth0.com/blog/real-world-angular-series-part-1/ as a reference
 import { Injectable } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 import { Location } from '@angular/common'
@@ -10,7 +11,6 @@ import 'rxjs/add/operator/catch'
 
 import { User } from './models/user.model'
 import { SignUpModel } from './models/signup.model'
-import { ErrorService } from './misc/error.service'
 
 import { base_url } from './config'
 
@@ -24,8 +24,7 @@ export class AuthService {
     private router: Router,
     private route: ActivatedRoute,
     private location: Location,
-    private http: HttpClient,
-    private es: ErrorService
+    private http: HttpClient
   ) {
     const previous = localStorage.getItem('previousPath') // || '/'
     localStorage.removeItem('previousPath')
@@ -39,7 +38,6 @@ export class AuthService {
           },
           err => {
             this.loading = false
-            this.setError(err)
           }
         )
     } else {
@@ -61,23 +59,16 @@ export class AuthService {
     return Observable.throw(errorMsg)
   }
 
-  setError(error): void {
-    this.es.setError(error)
-    console.error(error)
-    // this.router.navigateByUrl('/error')
-    window.location.href = base_url + '/error'
+  private postTwitterLogin$(): Observable<User[]> {
+    return this.http
+      .get(base_url + '/auth/get-user', {withCredentials: true})
+      .catch(this.handleError)
   }
 
   twitterLogin(): void {
     this.setCurrentPath()
     // TODO: Is there a way to do this with angular?
     window.location.href = base_url + '/auth/twitter'
-  }
-
-  postTwitterLogin$(): Observable<User[]> {
-    return this.http
-      .get(base_url + '/auth/get-user', {withCredentials: true})
-      .catch(this.handleError)
   }
 
   logout()  {
