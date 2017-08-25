@@ -5,6 +5,8 @@ import { Subscription } from 'rxjs/Subscription'
 import { ApiService } from './../../core/api.service'
 import { AuthService } from './../../core/auth.service'
 
+import { Place } from './../../core/models/place.model'
+
 @Component({
   selector: 'app-places',
   templateUrl: './places.component.html',
@@ -12,8 +14,7 @@ import { AuthService } from './../../core/auth.service'
 })
 export class PlacesComponent implements OnDestroy {
 
-  // TODO: Bar Model
-  @Input() places: any
+  @Input() places: Place[]
   optSub: Subscription
   loggedIn: boolean
   active: string
@@ -43,19 +44,10 @@ export class PlacesComponent implements OnDestroy {
       )
   }
 
+  // TODO: Test this vs Pipe
   sort(filter) {
     if (this.active !== filter) {
       this.active = filter
-      const type = filter.toLowerCase()
-      this.places.sort((a, b) => {
-        if (a[type] < b[type]) {
-          return type !== 'rating' ? -1 : 1
-        }
-        if (a[type] > b[type]) {
-          return type !== 'rating' ? 1 : -1
-        }
-        return 0
-      })
     }
   }
 

@@ -10,7 +10,7 @@ const CONFIG = require('./server/config')
 
 // ************************************************************************************ MONGOOSE SETUP
 mongoose.Promise = global.Promise
-const dbName = 'testDB'
+const dbName = 'nightLifeDB'
 mongoose.connect(CONFIG.mongodbUrl + `/${dbName}`, { useMongoClient: true })
 const db = mongoose.connection
 db.on('error', err => { console.error(err) })
@@ -31,15 +31,15 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(methodOverride('X-HTTP-Method-Override'))
 
-const morgan = require('morgan')
-app.use(morgan('dev'))
+if (process.env.NODE_ENV === 'dev') {
+  const morgan = require('morgan')
+  app.use(morgan('dev'))
+}
 
 // Session Setup
-// const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')(session)
 
-// app.use(cookieParser())
 app.use(session({
   secret: CONFIG.SESSION_SECRET,
   resave: true,

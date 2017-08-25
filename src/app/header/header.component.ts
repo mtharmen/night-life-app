@@ -1,7 +1,5 @@
 import { Component } from '@angular/core'
 
-import { NgbModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap'
-
 import { Subscription } from 'rxjs/Subscription'
 
 import { AuthService } from './../core/auth.service'

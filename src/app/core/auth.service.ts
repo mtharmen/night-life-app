@@ -73,7 +73,8 @@ export class AuthService {
 
   logout()  {
     this.removeUserInfo()
-    this.router.navigateByUrl('/')
+    // this.router.navigateByUrl('/')
+    window.location.reload()
   }
 
   storeUserInfo(user) {

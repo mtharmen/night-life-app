@@ -10,5 +10,5 @@ module.exports = {
   TWITTER_CONSUMER_KEY: process.env.TWITTER_CONSUMER_KEY,
   CALLBACK_URL: process.env.CALLBACK_URL || 'http://localhost:8080/auth/callback',
   successRedirectUrl: process.env.successRedirectUrl || 'http://localhost:4200',
-  failureRedirectUrl: process.env.failureRedirectUrl || 'http://localhost:4200/error'
+  failureRedirectUrl: process.env.failureRedirectUrl || 'http://localhost:8080/error'
 }

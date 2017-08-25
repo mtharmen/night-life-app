@@ -8,7 +8,7 @@ import { AuthService } from './../../core/auth.service'
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styles: []
 })
 export class HomeComponent implements OnInit, OnDestroy {
 
