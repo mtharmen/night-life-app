@@ -6,10 +6,14 @@ const CONFIG = require('./../config')
 const my = require('./../helper')
 const CustomError = my.CustomError
 
+router.get('/test', (req, res) => {
+  res.send('Auth Test')
+})
+
 // ****************************************************************************************************
 //                                                TWITTER LOGIN
 // ****************************************************************************************************
-// https://gist.github.com/JuanJo4/e408d9349b403523aeb00f262900e768 for Oauth/Twitter reference
+// https://github.com/ciaranj/node-oauth/blob/master/examples/twitter-example.js for Oauth/Twitter reference
 let oa = new OAuth(
   'https://api.twitter.com/oauth/request_token',
   'https://api.twitter.com/oauth/access_token',
@@ -24,35 +28,37 @@ const successRedirectUrl = CONFIG.successRedirectUrl || 'http://google.ca'
 const failureRedirectUrl = CONFIG.failureRedirectUrl || 'http://youtube.com'
 
 // Getting Request Token + Secret
-router.get('/twitter/:id?', getOauthToken)
-
-function getOauthToken (req, res, next) {
+router.get('/twitter/', (req, res, next) => {
   oa.getOAuthRequestToken((err, oauthToken, oauthTokenSecret, result) => {
     if (err) {
-      res.session.error = err
       console.error('Error getting OAuth request token')
+      req.session.error = err
       res.redirect(failureRedirectUrl)
       return
     }
-    const authorize = req.session.oauthAccessToken ? 'authenticate' : 'authorize'
-    const userAuthorizeUrl = 'https://api.twitter.com/oauth/' + authorize + '?oauth_token='
-
     req.session.oauthRequestToken = oauthToken
     req.session.oauthRequestTokenSecret = oauthTokenSecret
-    res.redirect(userAuthorizeUrl + oauthToken)
+    if (req.session.oauthAccessToken) {
+      return verifyCredentials(req, res)
+    }
+    return getAuthorization(req, res)
   })
+})
+
+function getAuthorization (req, res) {
+  const authorizationUrl = 'https://api.twitter.com/oauth/authorize?oauth_token=' + req.session.oauthRequestToken
+  res.redirect(authorizationUrl)
 }
 
 // Getting Access Token + Secret => Finding/Making User
-router.get('/callback', handleTwitterCallback, getFullProfile)
-
-function handleTwitterCallback (req, res, next) {
+router.get('/callback', (req, res, next) => {
   const oauthRequestToken = req.session.oauthRequestToken
   const oauthRequestTokenSecret = req.session.oauthRequestTokenSecret
   const oauthVerifier = req.query.oauth_verifier
 
   if (!req.query.oauth_verifier) {
     console.error('Authorization Request denied')
+    req.session.err = new CustomError('Authorization Request denied', 401)
     res.redirect(failureRedirectUrl)
     return
   }
@@ -71,59 +77,82 @@ function handleTwitterCallback (req, res, next) {
 
       req.session.oauthAccessToken = oauthAccessToken
       req.session.oauthAccessTokenSecret = oauthAccessTokenSecret
-      User.findOne({ 'twitter.id': result.user_id }).exec()
-        .then(user => {
-          if (!user) {
-            return next()
-          }
-          req.session.user = user
-          return successRedirect(req, res)
-        })
-        .catch(err => {
-          req.session.err = err
-          return res.redirect(failureRedirectUrl)
-        })
+      req.twitterID = '' + result.user_id
+      // Checking if user is already in database
+      return pullUserInfo(req, res)
+    })
+})
+
+function pullUserInfo (req, res) {
+  const twitterID = req.twitterID || req.profile.twitter.id
+  User.findOne({ 'twitter.id': twitterID }).exec()
+    .then(user => {
+      if (!user) {
+        if (req.profile) {
+          // Already have user info => make new user
+          return makeNewTwitterUser(req, res)
+        }
+        // Don't have user info => get from verfiyCredentials
+        req.noUser = true
+        return verifyCredentials(req, res)
+      }
+      req.session.user = user
+      return res.redirect(successRedirectUrl)
+    })
+    .catch(err => {
+      req.session.err = err
+      return res.redirect(failureRedirectUrl)
     })
 }
 
-function getFullProfile (req, res) {
+function verifyCredentials (req, res) {
   const verifyUrl = 'https://api.twitter.com/1.1/account/verify_credentials.json'
   const oauthAccessToken = req.session.oauthAccessToken
   const oauthAccessTokenSecret = req.session.oauthAccessTokenSecret
 
-  oa.get(verifyUrl, oauthAccessToken, oauthAccessTokenSecret, (err, jsonData, response) => {
+  oa.get(verifyUrl, oauthAccessToken, oauthAccessTokenSecret, (err, userInfo, response) => {
     if (err) {
-      console.error('Error getting full profile from twitter: ' + err.message)
-      req.session.error = err
-      res.redirect(failureRedirectUrl)
-      return
+      console.error('Error verifying token: ' + err.message)
+      return getAuthorization(res, req)
     }
-
-    const data = JSON.parse(jsonData)
-    const profile = {
-      username: '@' + data.screen_name,
+    const data = JSON.parse(userInfo)
+    req.profile = {
+      username: data.screen_name,
       twitter: {
-        id: data.id,
+        id: data.id_str,
         // token: oauthAccessToken,
         // tokenSecret: oauthAccessTokenSecret
         displayName: data.name
       }
     }
-    const newUser = makeNewTwitterUser(profile)
-    newUser.save()
-      .then(user => {
-        req.session.user = user
-        return successRedirect(req, res)
-      })
-      .catch(err => {
-        req.session.error = err
-        return res.redirect(failureRedirectUrl)
-      })
+    if (req.noUser) {
+      // Already checked the database if the user exists => skip to making a new user
+      return makeNewTwitterUser(req, res)
+    }
+    // Check if user is in database already
+    return pullUserInfo(req, res)
   })
 }
 
-function successRedirect (req, res) {
-  res.redirect(successRedirectUrl)
+function makeNewTwitterUser (req, res) {
+  let newUser = new User()
+  newUser.username = '@' + req.profile.username
+  newUser.twitter.id = req.profile.twitter.id
+  // newUser.twitter.token = req.profile.twitter.token
+  // newUser.twitter.tokenSecret = req.profile.twitter.tokenSecret
+  newUser.twitter.displayName = req.profile.twitter.displayName
+  newUser.role = 'member'
+
+  newUser.save()
+    .then(user => {
+      req.session.user = user
+      return res.redirect(successRedirectUrl)
+    })
+    .catch(err => {
+      req.session.error = err
+      delete req.session.user
+      return res.redirect(failureRedirectUrl)
+    })
 }
 
 // Route for client to call to get user after twitter login
@@ -139,25 +168,16 @@ function getUser (req, res, next) {
   }
 }
 
-// Twitter my Functions
-function makeNewTwitterUser (profile) {
-  let newUser = new User()
-  newUser.username = profile.username
-  newUser.twitter.id = profile.twitter.id
-  // newUser.twitter.token = profile.twitter.token
-  // newUser.twitter.tokenSecret = profile.twitter.tokenSecret
-  newUser.twitter.displayName = profile.twitter.displayName
-  // NOTE: empty objects are not currently saved
-  newUser.local = {}
-  newUser.profile = {}
-  newUser.role = 'guest'
-  return newUser
-}
-
-// ****************************************************************************************************
-//                                                    JWT LOGIN
-// ****************************************************************************************************
-
-router.get('/jwt/login', my.verifyToken, my.UserGuard, my.sendToken)
+router.get('/unlink', my.verifyToken, my.UserGuard, (req, res, next) => {
+  delete req.session.oauthAccessToken
+  delete req.session.oauthAccessTokenSecret
+  User.findByIdAndRemove(req.user._id).exec()
+    .then(removed => {
+      res.send('removed')
+    })
+    .catch(err => {
+      next(err)
+    })
+})
 
 module.exports = router
