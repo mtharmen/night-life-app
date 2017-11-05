@@ -1,15 +1,17 @@
 const router = require('express').Router()
 
 const my = require('./../helper')
-var Bar = require('../models/bar')
+const CONFIG = require('./../config')
+const Bar = require('../models/bar')
 
-var Yelp = require('yelp')
-require('dotenv').config()
+const Yelp = require('yelp')
+
+
 const yelp = new Yelp({
-  consumer_key: process.env.YELP_CONSUMER_KEY,
-  consumer_secret: process.env.YELP_CONSUMER_SECRET,
-  token: process.env.YELP_TOKEN,
-  token_secret: process.env.YELP_TOKEN_SECRET
+  consumer_key: CONFIG.YELP_CONSUMER_KEY,
+  consumer_secret: CONFIG.YELP_CONSUMER_SECRET,
+  token: CONFIG.YELP_TOKEN,
+  token_secret: CONFIG.YELP_TOKEN_SECRET
 })
 
 router.get('/search/:location', my.verifyToken, (req, res, next) => {

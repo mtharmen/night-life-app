@@ -14,5 +14,9 @@ module.exports = {
   TWITTER_CONSUMER_KEY: process.env.TWITTER_CONSUMER_KEY,
   CALLBACK_URL: process.env.CALLBACK_URL || 'http://localhost:8080/auth/callback',
   successRedirectUrl: process.env.successRedirectUrl || 'http://localhost:8080',
-  failureRedirectUrl: process.env.failureRedirectUrl || 'http://localhost:8080/error'
+  failureRedirectUrl: process.env.failureRedirectUrl || 'http://localhost:8080/error',
+  YELP_CONSUMER_KEY: process.env.YELP_CONSUMER_KEY,
+  YELP_CONSUMER_SECRET: process.env.YELP_CONSUMER_SECRET,
+  YELP_TOKEN: process.env.YELP_TOKEN,
+  YELP_TOKEN_SECRET: process.env.YELP_TOKEN_SECRET
 }
