@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV === 'dev') {
+  require('dotenv').config()
+}
+
 require('dotenv').config()
 
 module.exports = {
@@ -9,6 +13,6 @@ module.exports = {
   TWITTER_CONSUMER_SECRET: process.env.TWITTER_CONSUMER_SECRET,
   TWITTER_CONSUMER_KEY: process.env.TWITTER_CONSUMER_KEY,
   CALLBACK_URL: process.env.CALLBACK_URL || 'http://localhost:8080/auth/callback',
-  successRedirectUrl: process.env.successRedirectUrl || 'http://localhost:4200',
+  successRedirectUrl: process.env.successRedirectUrl || 'http://localhost:8080',
   failureRedirectUrl: process.env.failureRedirectUrl || 'http://localhost:8080/error'
 }

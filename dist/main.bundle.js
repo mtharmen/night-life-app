@@ -525,7 +525,7 @@ var _a, _b, _c, _d;
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return base_url; });
-var base_url = 'http://localhost:8080';
+var base_url = window.location.hostname !== 'localhost' ? window.location.origin : 'http://localhost:8080';
 //# sourceMappingURL=config.js.map
 
 /***/ }),
@@ -577,7 +577,7 @@ var SearchFilterPipe = (function () {
     function SearchFilterPipe() {
     }
     SearchFilterPipe.prototype.transform = function (places, filter) {
-        return places.filter(function (place) { return place['name'].toLowerCase().indexOf(filter) > -1; });
+        return places.filter(function (place) { return place['name'].toLowerCase().indexOf(filter.toLowerCase()) > -1; });
     };
     return SearchFilterPipe;
 }());
@@ -610,17 +610,18 @@ var TypeFilterPipe = (function () {
     TypeFilterPipe.prototype.transform = function (places, filter) {
         filter = filter ? filter.toLowerCase() : undefined;
         // ['Name', 'Rating', 'People', 'Going']\
+        var sorted = JSON.parse(JSON.stringify(places));
         switch (filter) {
             case 'name':
-                return places.sort(function (a, b) { return a[filter] < b[filter] ? -1 : 1; });
+                return sorted.sort(function (a, b) { return a[filter] < b[filter] ? -1 : 1; });
             case 'rating':
-                return places.sort(function (a, b) { return b[filter] - a[filter]; });
+                return sorted.sort(function (a, b) { return b[filter] - a[filter]; });
             case 'people':
-                return places.sort(function (a, b) { return a[filter] - b[filter]; });
+                return sorted.sort(function (a, b) { return a[filter] - b[filter]; });
             case 'going':
-                return places.filter(function (place) { return place[filter]; });
+                return sorted.filter(function (place) { return place[filter]; });
             default:
-                return places;
+                return sorted;
         }
     };
     return TypeFilterPipe;

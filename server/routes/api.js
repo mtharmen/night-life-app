@@ -30,7 +30,7 @@ router.get('/search/:location', my.verifyToken, (req, res, next) => {
         const found = req.payload ? reservation.filter(elm => elm.person === req.payload._id.toString()) : []
         req.bars[i].going = !!found.length
       })
-      res.send({ bars: req.bars, location: location })
+      res.json({ bars: req.bars, location: location })
     })
     .catch(err => {
       return next(err)
@@ -38,22 +38,32 @@ router.get('/search/:location', my.verifyToken, (req, res, next) => {
 })
 
 router.put('/add/:barName', my.verifyToken, my.UserGuard, (req, res, next) => {
-  var barName = req.params.barName
-  var expire = Date.now() + 1000 * 60 * 60 * 8 // expire in 8 hours
-  var reserve = new Bar({ expire: expire, bar: barName, person: req.user._id })
-  reserve.save(err => {
-    if (err) { return next(err) }
-    console.log(req.user._id + ' reserved at ' + barName)
-    res.send('saved')
-  })
+  const barName = req.params.barName
+  const expire = Date.now() + 1000 * 60 * 60 * 8 // expire in 8 hours
+  Bar.findOne({ bar: barName, person: req.user._id }).exec()
+    .then(existing => {
+      // NOTE: maybe keep all reservations instead reusing them?
+      if (existing) {
+        existing.expire = expire
+        return existing.save()
+      }
+      const reserve = new Bar({ expire: expire, bar: barName, person: req.user._id })
+      return reserve.save()
+    })
+    .then(saved => {
+      res.json({ msg: 'saved' })
+    })
+    .catch(err => {
+      return next(err)
+    })
 })
 
 router.delete('/remove/:barName', my.verifyToken, my.UserGuard, (req, res, next) => {
   const barName = req.params.barName
-  Bar.remove({ bar: barName, person: req.user._id }).exec()
+  Bar.remove({ expire: { $gt: Date.now() }, bar: barName, person: req.user._id }).exec()
     .then(result => {
-      console.log(req.user._id + ' removed from ' + barName)
-      res.send('removed')
+      // console.log(req.user._id + ' removed from ' + barName)
+      res.json({ msg: 'removed' })
     })
     .catch(err => {
       return next(err)
@@ -62,7 +72,7 @@ router.delete('/remove/:barName', my.verifyToken, my.UserGuard, (req, res, next)
 
 function parse (data) {
   return data.map((elm, i) => {
-    var barInfo = {
+    const barInfo = {
       name: elm.name,
       stars: convertRating(elm.rating),
       rating: elm.rating,

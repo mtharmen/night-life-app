@@ -9,17 +9,18 @@ export class TypeFilterPipe implements PipeTransform {
   transform(places: Place[], filter: string): any {
     filter = filter ? filter.toLowerCase() : undefined
     // ['Name', 'Rating', 'People', 'Going']\
+    const sorted = JSON.parse(JSON.stringify(places))
     switch (filter) {
       case 'name':
-        return places.sort((a, b) => a[filter] < b[filter] ? -1 : 1)
+        return sorted.sort((a, b) => a[filter] < b[filter] ? -1 : 1)
       case 'rating':
-        return places.sort((a, b) => b[filter] - a[filter])
+        return sorted.sort((a, b) => b[filter] - a[filter])
       case 'people':
-        return places.sort((a, b) => a[filter] - b[filter])
+        return sorted.sort((a, b) => a[filter] - b[filter])
       case 'going':
-        return places.filter(place => place[filter])
+        return sorted.filter(place => place[filter])
       default:
-        return places
+        return sorted
     }
   }
 }

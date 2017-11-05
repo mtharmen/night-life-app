@@ -28,7 +28,15 @@ const successRedirectUrl = CONFIG.successRedirectUrl || 'http://google.ca'
 const failureRedirectUrl = CONFIG.failureRedirectUrl || 'http://youtube.com'
 
 // Getting Request Token + Secret
-router.get('/twitter/', (req, res, next) => {
+router.get('/twitter/', (req, res) => {
+  if (req.session.oauthAccessToken && req.session.oauthAccessTokenSecret) {
+    return verifyCredentials(req, res)
+  } else {
+    return getAuthorization(req, res)
+  }
+})
+
+function getAuthorization (req, res) {
   oa.getOAuthRequestToken((err, oauthToken, oauthTokenSecret, result) => {
     if (err) {
       console.error('Error getting OAuth request token')
@@ -38,16 +46,9 @@ router.get('/twitter/', (req, res, next) => {
     }
     req.session.oauthRequestToken = oauthToken
     req.session.oauthRequestTokenSecret = oauthTokenSecret
-    if (req.session.oauthAccessToken) {
-      return verifyCredentials(req, res)
-    }
-    return getAuthorization(req, res)
+    const authorizationUrl = 'https://api.twitter.com/oauth/authorize?oauth_token=' + req.session.oauthRequestToken
+    res.redirect(authorizationUrl)
   })
-})
-
-function getAuthorization (req, res) {
-  const authorizationUrl = 'https://api.twitter.com/oauth/authorize?oauth_token=' + req.session.oauthRequestToken
-  res.redirect(authorizationUrl)
 }
 
 // Getting Access Token + Secret => Finding/Making User
@@ -168,6 +169,7 @@ function getUser (req, res, next) {
   }
 }
 
+// Route for unlinking Twitter info
 router.get('/unlink', my.verifyToken, my.UserGuard, (req, res, next) => {
   delete req.session.oauthAccessToken
   delete req.session.oauthAccessTokenSecret
