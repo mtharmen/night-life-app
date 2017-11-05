@@ -34,6 +34,27 @@ app.use(methodOverride('X-HTTP-Method-Override'))
 if (process.env.NODE_ENV === 'dev') {
   const morgan = require('morgan')
   app.use(morgan('dev'))
+  
+  // CORS Support
+  const cors = require('cors')
+  const allowedOrigins = [
+    'http://localhost:4200',
+    'http://localhost:8080',
+    'https://api.twitter.com'
+  ]
+  const corsOptions = {
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.indexOf(origin) > -1) {
+        cb(null, true)
+      } else {
+        cb(new Error('Invalid Origin'))
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
+  }
+  app.use(cors(corsOptions))
+  app.options('*', cors(corsOptions))
 }
 
 // Session Setup
@@ -50,27 +71,6 @@ app.use(session({
     expires: new Date(Date.now() + 1000 * 60 * 60)
   }
 }))
-
-// CORS Support
-const cors = require('cors')
-const allowedOrigins = [
-  'http://localhost:4200',
-  'http://localhost:8080',
-  'https://api.twitter.com'
-]
-const corsOptions = {
-  origin: (origin, cb) => {
-    if (!origin || allowedOrigins.indexOf(origin) > -1) {
-      cb(null, true)
-    } else {
-      cb(new Error('Invalid Origin'))
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true
-}
-app.use(cors(corsOptions))
-app.options('*', cors(corsOptions))
 
 // ************************************************************************************ ROUTES
 if (process.env.NODE_ENV !== 'dev') {
