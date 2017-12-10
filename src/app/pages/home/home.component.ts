@@ -66,7 +66,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   submit(location) {
     this.location = location
-    console.log(location)
     localStorage.setItem('pastLocation', location)
     const expire = Date.now() + 1000 * 60 * 60 * 24
     localStorage.setItem('clearLocation', expire.toString())
