@@ -114,7 +114,7 @@ function verifyCredentials (req, res) {
   oa.get(verifyUrl, oauthAccessToken, oauthAccessTokenSecret, (err, userInfo, response) => {
     if (err) {
       console.error('Error verifying token: ' + err.message)
-      return getAuthorization(res, req)
+      return getAuthorization(req, res)
     }
     const data = JSON.parse(userInfo)
     req.profile = {
