@@ -6,10 +6,6 @@ const CONFIG = require('./../config')
 const my = require('./../helper')
 const CustomError = my.CustomError
 
-router.get('/test', (req, res) => {
-  res.send('Auth Test')
-})
-
 // ****************************************************************************************************
 //                                                TWITTER LOGIN
 // ****************************************************************************************************
@@ -29,6 +25,8 @@ const failureRedirectUrl = CONFIG.failureRedirectUrl || 'http://youtube.com'
 
 // Getting Request Token + Secret
 router.get('/twitter/', (req, res) => {
+  delete req.session.error
+  delete req.session.test
   if (req.session.oauthAccessToken && req.session.oauthAccessTokenSecret) {
     return verifyCredentials(req, res)
   } else {
@@ -41,6 +39,7 @@ function getAuthorization (req, res) {
     if (err) {
       console.error('Error getting OAuth request token')
       req.session.error = err
+      console.log(err)
       res.redirect(failureRedirectUrl)
       return
     }
@@ -86,6 +85,7 @@ router.get('/callback', (req, res, next) => {
 
 function pullUserInfo (req, res) {
   const twitterID = req.twitterID || req.profile.twitter.id
+
   User.findOne({ 'twitter.id': twitterID }).exec()
     .then(user => {
       if (!user) {
@@ -114,8 +114,9 @@ function verifyCredentials (req, res) {
   oa.get(verifyUrl, oauthAccessToken, oauthAccessTokenSecret, (err, userInfo, response) => {
     if (err) {
       console.error('Error verifying token: ' + err.message)
-      return getAuthorization(res, req)
+      return getAuthorization(req, res)
     }
+
     const data = JSON.parse(userInfo)
     req.profile = {
       username: data.screen_name,
@@ -170,7 +171,7 @@ function getUser (req, res, next) {
 }
 
 // Route for unlinking Twitter info
-router.get('/unlink', my.verifyToken, my.UserGuard, (req, res, next) => {
+router.post('/unlink', my.verifyToken, my.UserGuard, (req, res, next) => {
   delete req.session.oauthAccessToken
   delete req.session.oauthAccessTokenSecret
   User.findByIdAndRemove(req.user._id).exec()
